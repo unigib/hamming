@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSS41502: Hamming Code Lab Exercise</title>
+    <style>
+        @page {
+            margin: 12mm;
+        }
+        @media print {
+            .page-break-before { break-before: page; }
+            .lab-container {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+            }
+            .lab-header {
+                padding-bottom: 6px;
+                margin-bottom: 12px;
+            }
+            .lab-header h1 { font-size: 20px; }
+            .lab-header h2 { font-size: 13px; }
+            .lab-header + .lab-section {
+                padding: 12px;
+                margin-bottom: 0;
+                line-height: 1.3;
+            }
+            .lab-header + .lab-section h3 {
+                margin-bottom: 8px;
+                padding-bottom: 4px;
+            }
+            .lab-header + .lab-section p { margin: 8px 0; }
+            .lab-header + .lab-section .svg-alignment-box {
+                margin: 8px 0;
+                padding: 4px 0;
+            }
+            .lab-header + .lab-section .responsive-svg {
+                width: 60%;
+                max-width: 300px;
+            }
+            .lab-header + .lab-section .bitstream-box {
+                margin: 8px 0;
+                padding: 8px;
+            }
+            .lab-header + .lab-section .bit-table { margin: 4px 0; }
+            .lab-header + .lab-section .bit-table th,
+            .lab-header + .lab-section .bit-table td {
+                padding: 4px;
+                font-size: 11px;
+            }
+            .lab-header + .lab-section code { font-size: 11px; }
+        }
+        .lab-container {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        .lab-header {
+            border-bottom: 4px solid #a30022;
+            padding-bottom: 12px;
+            margin-bottom: 30px;
+        }
+        .lab-header h1 {
+            color: #a30022;
+            margin: 0;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .lab-header h2 {
+            color: #4a5568;
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .lab-section {
+            border: 1px solid #e2e8f0;
+            /* border-left: 5px solid #a30022;*/
+            padding: 25px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            background: #fdfdfd;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        h3 {
+            color: #a30022;
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 8px;
+            font-weight: 700;
+        }
+        .svg-alignment-box {
+            text-align: center;
+            margin: 25px 0 15px 0;
+            background-color: #ffffff;
+            border: 1px dashed #cbd5e0;
+            border-radius: 6px;
+            padding: 15px 0;
+        }
+        .responsive-svg {
+            width: 75%;
+            max-width: 375px;
+            height: auto;
+        }
+        .bitstream-box {
+            margin: 20px 0;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .bitstream-box p {
+            margin-top: 0;
+            font-weight: bold;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        .bit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .bit-table th, .bit-table td {
+            border: 1px solid #cbd5e0;
+            text-align: center;
+            padding: 8px;
+            font-size: 14px;
+        }
+        .bit-table th {
+            background-color: #edf2f7;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        ul, ol { padding-left: 20px; }
+        li { margin-bottom: 12px; }
+        code {
+            background-color: #f7fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="lab-container">
+    <div class="lab-header">
+        <h1>CSS41502: Intro to Computer Systems and Operating Systems </h1>
+        <h2>University of Gibraltar — Lab Exercise: Hamming Circles</h2>
+    </div>
+
+    <div class="lab-section">
+        <h3>Part 1: The Reference Model (Your Master Key)</h3>
+        <p>1. <strong>Choose a 4-bit data stream</strong> (e.g., <code>1 0 1 1</code>). Note that <strong>D1 is your LSB</strong> (rightmost in standard notation) and <strong>D4 is your MSB</strong>. <p>Write it down privately here: <strong>[ D4:____ &nbsp; D3:____ &nbsp; D2:____ &nbsp; D1:____ ]</strong></p>
+        </p><p>2. In the vector map below, assign your data bits to their appropriate intersection zones. Calculate <strong>even parity</strong> for Circle A, Circle B, and Circle C by writing a <code>0</code> or <code>1</code> in the outer quadrants so that the total count of <code>1</code>s inside each complete circle is an even value.</p>
+        
+        <div class="svg-alignment-box">
+            <svg class="responsive-svg" width="500" height="420" viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="250" cy="160" r="110" fill="rgba(163, 0, 34, 0.01)" stroke="#a30022" stroke-width="2.5" />
+                <circle cx="315" cy="260" r="110" fill="rgba(74, 85, 104, 0.01)" stroke="#4a5568" stroke-width="2.5" />
+                <circle cx="185" cy="260" r="110" fill="rgba(163, 0, 34, 0.01)" stroke="#e53e3e" stroke-width="2.5" />
+
+                <text x="250" y="30"  fill="#a30022" font-size="14" font-family="sans-serif" font-weight="bold" text-anchor="middle">CIRCLE A (Top)</text>
+                <text x="435" y="360" fill="#4a5568" font-size="14" font-family="sans-serif" font-weight="bold" text-anchor="middle">CIRCLE B (Right)</text>
+                <text x="65"  y="360" fill="#e53e3e" font-size="14" font-family="sans-serif" font-weight="bold" text-anchor="middle">CIRCLE C (Left)</text>
+
+                <text x="250" y="85" font-family="monospace" font-size="15" font-weight="bold" fill="#2d3748" text-anchor="middle">P1 = </text>
+                <text x="385" y="300" font-family="monospace" font-size="15" font-weight="bold" fill="#2d3748" text-anchor="middle">P2 = </text>
+                <text x="115" y="300" font-family="monospace" font-size="15" font-weight="bold" fill="#2d3748" text-anchor="middle">P4 = </text>
+
+                <text x="250" y="230" font-family="monospace" font-size="15" font-weight="bold" fill="#a30022" text-anchor="middle">D1 = </text>
+                <text x="310" y="175" font-family="monospace" font-size="14" font-weight="bold" fill="#1a202c" text-anchor="middle">D2 = </text>
+                <text x="190" y="175" font-family="monospace" font-size="14" font-weight="bold" fill="#1a202c" text-anchor="middle">D3 = </text>
+                <text x="250" y="310" font-family="monospace" font-size="14" font-weight="bold" fill="#1a202c" text-anchor="middle">D4 = </text>
+            </svg>
+        </div>
+
+        <div class="bitstream-box">
+            <p>3. Serialization Step: Linearize your Venn diagram components into the official 7-bit transmission format below to establish the "Sent String":</p>
+            <table class="bit-table">
+                <thead>
+                    <tr>
+                        <th>Bit Index</th>
+                        <th>Bit 1 (P1)</th>
+                        <th>Bit 2 (P2)</th>
+                        <th>Bit 3 (D1)</th>
+                        <th>Bit 4 (P4)</th>
+                        <th>Bit 5 (D2)</th>
+                        <th>Bit 6 (D3)</th>
+                        <th>Bit 7 (D4)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Sent Value</strong></td>
+                        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p><em>(Keep this page hidden from your partner—this is your evaluation key!)</em></p>
+    </div>
+    <div class="lab-section page-break-before">
+          
+        <h3>Part 2: The Transmission Sabotage (For Your Partner)</h3>
+        <p>1. Transcribe your calculated bits from Part 1 into the table below, <strong>EXCEPT you must intentionally flip exactly ONE bit position</strong> (invert a <code>0</code> to a <code>1</code>, or a <code>1</code> to a <code>0</code>).</p>
+        <p>2. Fold or detach this bottom segment and pass it to your partner. Your partner must read this linear data stream, map it backwards into their blank diagram, and analyze the parity errors.</p>
+        
+        <p><strong>Sender Name:</strong> ________________________ &nbsp;&nbsp;&nbsp;&nbsp; <strong>Receiver Name:</strong> ________________________</p>
+
+        <div class="bitstream-box" style="border-left: 4px solid #cc0000; background: #fffafb;">
+            <p style="color: #a30022;">⚠️ RECEIVED BIT STREAM FRAME (Partner must populate this row first):</p>
+            <table class="bit-table">
+                <thead>
+                    <tr>
+                        <th>Bit Index</th>
+                        <th>Bit 1 (P1)</th>
+                        <th>Bit 2 (P2)</th>
+                        <th>Bit 3 (D1)</th>
+                        <th>Bit 4 (P4)</th>
+                        <th>Bit 5 (D2)</th>
+                        <th>Bit 6 (D3)</th>
+                        <th>Bit 7 (D4)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #ffffff;">
+                        <td><strong>Corrupted String</strong></td>
+                        <td>&nbsp;</td><td> &nbsp; </td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>3. Map the linear bits from the array above directly into their correct spatial layout fields inside the receiver workspace diagram:</p>
+
+        <div class="svg-alignment-box">
+            <svg class="responsive-svg" width="500" height="420" viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="250" cy="160" r="110" fill="none" stroke="#a30022" stroke-width="2" stroke-dasharray="6,4" />
+                <circle cx="315" cy="260" r="110" fill="none" stroke="#4a5568" stroke-width="2" stroke-dasharray="6,4" />
+                <circle cx="185" cy="260" r="110" fill="none" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" />
+
+                <text x="250" y="85"  font-family="sans-serif" font-size="14" fill="#2d3748" text-anchor="middle">P1: [ &nbsp; ]</text>
+                <text x="385" y="300" font-family="sans-serif" font-size="14" fill="#2d3748" text-anchor="middle">P2: [ &nbsp; ]</text>
+                <text x="115" y="300" font-family="sans-serif" font-size="14" fill="#2d3748" text-anchor="middle">P4: [ &nbsp; ]</text>
+                
+                <text x="250" y="230" font-family="sans-serif" font-size="14" fill="#a30022" font-weight="bold" text-anchor="middle">D1: [ &nbsp; ]</text>
+                <text x="310" y="175" font-family="sans-serif" font-size="14" fill="#2d3748" text-anchor="middle">D2: [ &nbsp; ]</text>
+                <text x="190" y="175" font-family="sans-serif" font-size="14" fill="#2d3748" text-anchor="middle">D3: [ &nbsp; ]</text>
+                <text x="250" y="310" font-family="sans-serif" font-size="14" fill="#2d3748" text-anchor="middle">D4: [ &nbsp; ]</text>
+            </svg>
+        </div>
+    </div>
+    <div class="lab-section page-break-before">
+          
+        <h3>Part 3: The Hardware Receiver (Partner Evaluation)</h3>
+        <p><em>Task: Audit the total parity bit counts inside each circle boundary to calculate the error syndrome.</em></p>
+        
+        <ul>
+            <li><strong>Check Circle A (Top):</strong> Total count of <code>1</code>s is [ Even / Odd ]. Valid? [ Yes / No ]</li>
+            <li><strong>Check Circle B (Right):</strong> Total count of <code>1</code>s is [ Even / Odd ]. Valid? [ Yes / No ]</li>
+            <li><strong>Check Circle C (Left):</strong> Total count of <code>1</code>s is [ Even / Odd ]. Valid? [ Yes / No ]</li>
+        </ul>
+
+        <p><strong>Diagnostic Evaluation Rules:</strong></p>
+        <ul>
+            <li>If only <strong>one</strong> circle is invalid, the flipped bit is that circle's outer <strong>Parity Bit</strong>.</li>
+            <li>If <strong>two</strong> circles are invalid, the flipped bit is the <strong>Data Bit shared exclusively between them</strong> (<code>D2</code>, <code>D3</code>, or <code>D4</code>).</li>
+            <li>If <strong>all three</strong> circles are invalid, the error sits dead center in <strong>Data Bit <code>D1</code></strong>.</li>
+        </ul>
+
+        <p><strong>The Verdict:</strong></p>
+        <ul>
+            <li>The error was located in circle region: <strong>____________________</strong></li>
+            <li>The corrupted component corresponds to: <strong>[ Parity Bit _____ / Data Bit D_____ ]</strong></li>
+            <li>The structural index position of the broken wire bit was: <strong>Bit Position Index # _____</strong></li>
+            <li>The <strong>Corrected 4-bit Data payload</strong> is: <strong>[ D4:____ &nbsp; D3:____ &nbsp; D2:____ &nbsp; D1:____ ]</strong></li>
+        </ul>
+        <p><em>Return this sheet back to the sender to verify alignment against their Part 1 Master Key!</em></p>
+    </div>
+</div>
+
+</body>
+</html>
