@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: The Hamming Code Skip/Take Rule</title>
+    <!-- Tailwind CSS CDN for visual integration inside Canvas LMS -->
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>
+</head>
+<body class="bg-slate-50 p-4 md:p-8 font-sans antialiased text-slate-800">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-blue-900 p-6 text-white">
+            <span class="bg-blue-700 text-blue-100 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded">Study Guide</span>
+            <h1 class="text-2xl font-bold mt-2 mb-1">Mastering the Hamming Code "Skip/Take" Rule</h1>
+            <p class="text-blue-200 text-sm">A student-friendly cheat sheet for mapping parity coverage without needing binary conversion tables.</p>
+        </div>
+
+        <div class="p-6 space-y-8">
+            <!-- Core Concept Explanation -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-900 mb-2 border-b border-slate-200 pb-1 flex items-center gap-2">
+                    <span>💡</span> The Basic Logic
+                </h2>
+                <p class="text-slate-600 leading-relaxed text-sm">
+                    In a Hamming Code codeword, **Parity Bits** are always placed at positions that are powers of 2 (1, 2, 4, 8, 16...). Each parity bit is responsible for checking a unique combination of positions to ensure error detection works. 
+                </p>
+                <p class="text-slate-600 leading-relaxed text-sm mt-2">
+                    Instead of converting every bit position index to a binary number during an exam, you can use the **Skip/Take Pattern**. You always start your count at the parity bit's own position index, and the rule dictates how many consecutive bits you count ("Take") versus how many you ignore ("Skip").
+                </p>
+            </section>
+
+            <!-- The Core Matrix Rules Table -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-900 mb-3 border-b border-slate-200 pb-1 flex items-center gap-2">
+                    <span>📋</span> The Universal Cheat Sheet Pattern
+                </h2>
+                
+                <div class="overflow-x-auto border border-slate-200 rounded-lg shadow-xs">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 font-bold text-slate-700">
+                                <th class="p-3 w-1/4">Parity Bit</th>
+                                <th class="p-3 w-1/4">The Rule</th>
+                                <th class="p-3">Bit Positions Covered (Examples)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="p-3 font-mono font-bold text-red-700 bg-red-50/30">P₁ (Position 1)</td>
+                                <td class="p-3 font-semibold text-slate-700">Take 1, Skip 1</td>
+                                <td class="p-3 font-mono text-xs text-slate-600 bg-slate-50/50">1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21...</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-mono font-bold text-red-700 bg-red-50/30">P₂ (Position 2)</td>
+                                <td class="p-3 font-semibold text-slate-700">Take 2, Skip 2</td>
+                                <td class="p-3 font-mono text-xs text-slate-600 bg-slate-50/50">2-3, 6-7, 10-11, 14-15, 18-19, 22-23...</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-mono font-bold text-red-700 bg-red-50/30">P₄ (Position 4)</td>
+                                <td class="p-3 font-semibold text-slate-700">Take 4, Skip 4</td>
+                                <td class="p-3 font-mono text-xs text-slate-600 bg-slate-50/50">4-7, 12-15, 20-23, 28-31...</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-mono font-bold text-red-700 bg-red-50/30">P₈ (Position 8)</td>
+                                <td class="p-3 font-semibold text-slate-700">Take 8, Skip 8</td>
+                                <td class="p-3 font-mono text-xs text-slate-600 bg-slate-50/50">8-15, 24-31, 40-47...</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-mono font-bold text-red-700 bg-red-50/30">P₁₆ (Position 16)</td>
+                                <td class="p-3 font-semibold text-slate-700">Take 16, Skip 16</td>
+                                <td class="p-3 font-mono text-xs text-slate-600 bg-slate-50/50">16-31, 48-63, 80-95...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Visual Deep Dive Example -->
+            <section class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                <h3 class="text-md font-bold text-slate-900 mb-2 flex items-center gap-1.5">
+                    <span>🔍</span> Visualizing a Row: Let's look at P₄
+                </h3>
+                <p class="text-sm text-slate-600 mb-4">
+                    If you are calculating the value for parity bit <strong>P₄</strong>, your pattern starts right at position 4. You take 4 positions, skip the next 4, and repeat.
+                </p>
+                
+                <!-- Graphic Visualization Grid -->
+                <div class="grid grid-cols-7 sm:grid-cols-14 gap-1.5 text-center font-mono text-xs max-w-2xl">
+                    <!-- Row 1-7 -->
+                    <div class="p-1 rounded bg-slate-200 text-slate-400 border border-slate-300">1<br><span class="text-[9px]">Skip</span></div>
+                    <div class="p-1 rounded bg-slate-200 text-slate-400 border border-slate-300">2<br><span class="text-[9px]">Skip</span></div>
+                    <div class="p-1 rounded bg-slate-200 text-slate-400 border border-slate-300">3<br><span class="text-[9px]">Skip</span></div>
+                    <div class="p-1 rounded bg-green-100 text-green-800 border-2 border-green-500 font-bold shadow-xs">4<br><span class="text-[9px]">TAKE</span></div>
+                    <div class="p-1 rounded bg-green-100 text-green-800 border-2 border-green-500 font-bold shadow-xs">5<br><span class="text-[9px]">TAKE</span></div>
+                    <div class="p-1 rounded bg-green-100 text-green-800 border-2 border-green-500 font-bold shadow-xs">6<br><span class="text-[9px]">TAKE</span></div>
+                    <div class="p-1 rounded bg-green-100 text-green-800 border-2 border-green-500 font-bold shadow-xs">7<br><span class="text-[9px]">TAKE</span></div>
+                    
+                    <!-- Row 8-14 -->
+                    <div class="p-1 rounded bg-slate-200 text-slate-400 border border-slate-300">8<br><span class="text-[9px]">Skip</span></div>
+                    <div class="p-1 rounded bg-slate-200 text-slate-400 border border-slate-300">9<br><span class="text-[9px]">Skip</span></div>
+                    <div class="p-1 rounded bg-slate-200 text-slate-400 border border-slate-300">10<br><span class="text-[9px]">Skip</span></div>
+                    <div class="p-1 rounded bg-slate-200 text-slate-400 border border-slate-300">11<br><span class="text-[9px]">Skip</span></div>
+                    <div class="p-1 rounded bg-green-100 text-green-800 border-2 border-green-500 font-bold shadow-xs">12<br><span class="text-[9px]">TAKE</span></div>
+                    <div class="p-1 rounded bg-green-100 text-green-800 border-2 border-green-500 font-bold shadow-xs">13<br><span class="text-[9px]">TAKE</span></div>
+                    <div class="p-1 rounded bg-green-100 text-green-800 border-2 border-green-500 font-bold shadow-xs">14<br><span class="text-[9px]">TAKE</span></div>
+                </div>
+            </section>
+
+            <!-- Exam Strategy Quick Tips -->
+            <section>
+                <h2 class="text-lg font-bold text-slate-900 mb-2 border-b border-slate-200 pb-1 flex items-center gap-2">
+                    <span>🚀</span> Quick Exam Strategy Steps
+                </h2>
+                <ol class="list-decimal list-inside text-sm text-slate-600 space-y-2 mt-2 leading-relaxed">
+                    <li><strong>Map the Positions:</strong> Draw out standard numbered slots (1, 2, 3, 4...) based on your total calculated codeword length.</li>
+                    <li><strong>Isolate Parities:</strong> Mark positions 1, 2, 4, 8, and 16 as Parity slots immediately. Fill all remaining slots sequentially with your raw data bits.</li>
+                    <li><strong>Calculate via Even Parity:</strong> Use the skip/take rules above to collect the data bits belonging to each row, and perform an XOR operation (or simply count the number of <code>1</code>s) to assign the final value to that row's parity bit slot.</li>
+                </ol>
+            </section>
+        </div>
+
+        <!-- Footer / Back to simulator note -->
+        <div class="bg-slate-100 p-4 border-t border-slate-200 text-center text-xs text-slate-500 font-medium">
+            Review your patterns using the interactive matrix simulator module directly on your assignments tab.
+        </div>
+    </div>
+
+</body>
+</html>

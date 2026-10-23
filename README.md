@@ -120,6 +120,21 @@ that folder, and run:
 python hamming_demo.py
 ```
 
+## Play the browser game
+
+Open [`hamming-game.html`](./hamming-game.html) in a browser to practise finding
+a single flipped bit in a Hamming codeword. Choose a code length from 3 to 31
+bits, select the position you think is faulty, and check your answer to see the
+parity checks and syndrome. A formula helper explains the parity-bit rule and
+updates the data/parity counts for the selected length. Easy mode marks parity
+positions; Hard mode hides those hints until after an answer. The game has no
+build step or external dependencies. The repository includes an Amplify build
+specification, and the root page redirects to the game. To publish with AWS
+Amplify, push the game files to a GitHub branch, create an Amplify Hosting app
+connected to that repository and branch, and let Amplify use `amplify.yml`.
+The spec publishes only `index.html`, `hamming-game.html`, and `logo.png`.
+Keep the game HTML and logo together on other static hosts as well.
+
 ## Try it yourself
 
 1. Enter four bits in **D4 D3 D2 D1** order, such as `1011`, and select
@@ -144,6 +159,8 @@ multiple-bit errors.
 ## Project files
 
 - `hamming_demo.py` — Tkinter interface and Hamming (7, 4) implementation.
+- `hamming-game.html` — static browser game for locating a flipped bit; uses
+  `logo.png` for University of Gibraltar branding.
 - `logo.png` — University of Gibraltar logo displayed in the app.
 - `test_hamming_demo.py` — unit tests for encoding, parity checks, and
   single-bit correction.
