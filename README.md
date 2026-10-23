@@ -125,13 +125,17 @@ python hamming_demo.py
 Open [`hamming-game.html`](./hamming-game.html) in a browser to practise finding
 a single flipped bit in a Hamming codeword. Choose a code length from 3 to 31
 bits, select the position you think is faulty, and check your answer to see the
-parity checks and syndrome. A formula helper explains the parity-bit rule and
+parity checks and syndrome; the flipped bit may be a data bit or a parity bit.
+A formula helper explains the parity-bit rule and
 updates the data/parity counts for the selected length. Easy mode marks parity
 positions; Hard mode hides those hints until after an answer. The game has no
-build step or external dependencies. The repository includes an Amplify build
-specification, and the root page redirects to the game. To publish with AWS
-Amplify, push the game files to a GitHub branch, create an Amplify Hosting app
-connected to that repository and branch, and let Amplify use `amplify.yml`.
+build step or external dependencies. A “How to find the bit” dialog provides
+the parity-check steps and worked examples for both data-bit and parity-bit
+errors. The repository includes
+an Amplify build specification, and the root page redirects to the game. To
+publish with AWS Amplify, push the game files to a GitHub branch, create an
+Amplify Hosting app connected to that repository and branch, and let Amplify
+use `amplify.yml`.
 The spec publishes only `index.html`, `hamming-game.html`, and `logo.png`.
 Keep the game HTML and logo together on other static hosts as well.
 

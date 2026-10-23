@@ -106,7 +106,7 @@
         .difficulty {
             display: flex;
             gap: 6px;
-            margin: 10px 0 0;
+            margin: 0;
             padding: 0;
             border: 0;
         }
@@ -137,6 +137,69 @@
             border-color: var(--navy);
             color: var(--navy);
             background: #e8eef7;
+        }
+
+        .parity-controls {
+            display: flex;
+            align-items: end;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .help-button {
+            padding: 5px 8px;
+            border: 1px solid #aebaca;
+            border-radius: 6px;
+            color: var(--navy);
+            background: #fff;
+            cursor: pointer;
+            font-size: .76rem;
+            font-weight: 600;
+        }
+
+        .help-button:hover { background: #f1f5f9; }
+
+        .guide-dialog {
+            width: min(620px, calc(100% - 32px));
+            max-height: min(85vh, 760px);
+            padding: 0;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: #263248;
+            box-shadow: 0 24px 70px #0f172a55;
+        }
+
+        .guide-dialog::backdrop { background: #10243b99; }
+
+        .guide-content { padding: 22px 24px 24px; }
+
+        .guide-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .guide-header h2 { margin: 0; }
+        .guide-content p { line-height: 1.55; }
+        .guide-steps { padding-left: 22px; }
+        .guide-steps li { margin: 10px 0; line-height: 1.5; }
+        .guide-code { font: 700 1rem Consolas, monospace; letter-spacing: .06em; }
+        .guide-table { width: 100%; margin: 14px 0; border-collapse: collapse; }
+        .guide-table th, .guide-table td { padding: 8px; border: 1px solid var(--border); text-align: left; }
+        .guide-table th { color: var(--navy); background: #f1f5f9; }
+        .guide-close {
+            flex: 0 0 auto;
+            padding: 7px 11px;
+            border: 1px solid #aebaca;
+            border-radius: 6px;
+            color: var(--navy);
+            background: #fff;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         .hint, .settings-error {
@@ -315,11 +378,14 @@
                     <label for="code-length">Code length (bits)</label>
                     <input id="code-length" type="number" min="3" max="31" step="1" value="7">
                     <p class="hint">Choose 3–31 bits. Applies to the next challenge.</p>
-                    <fieldset class="difficulty">
-                        <legend>Parity hints</legend>
-                        <label><input type="radio" name="difficulty" value="easy" checked> Show Parity</label>
-                        <label><input type="radio" name="difficulty" value="hard"> Hide Parity</label>
-                    </fieldset>
+                    <div class="parity-controls">
+                        <fieldset class="difficulty">
+                            <legend>Parity hints</legend>
+                            <label><input type="radio" name="difficulty" value="easy" checked> Show Parity</label>
+                            <label><input type="radio" name="difficulty" value="hard"> Hide Parity</label>
+                        </fieldset>
+                        <button id="open-guide" class="help-button" type="button" aria-haspopup="dialog">How to find the bit</button>
+                    </div>
                     <p id="settings-error" class="settings-error" role="alert" hidden></p>
                 </div>
                 <div class="scoreboard" aria-label="Your score">
@@ -350,9 +416,49 @@
                 <section id="feedback" class="feedback" aria-live="polite" hidden></section>
             </section>
 
-            <p class="footnote">Each challenge uses even parity and exactly one flipped bit. After you answer, compare the parity checks and syndrome with your chosen position.</p>
+            <p class="footnote">Each challenge uses even parity and flips exactly one bit, which may be a data bit or parity bit. After you answer, compare the parity checks and syndrome with your chosen position.</p>
         </main>
     </div>
+
+    <dialog id="guide-dialog" class="guide-dialog" aria-labelledby="guide-title">
+        <div class="guide-content">
+            <div class="guide-header">
+                <h2 id="guide-title">How to find the faulty bit</h2>
+                <form method="dialog">
+                    <button class="guide-close" type="submit">Close</button>
+                </form>
+            </div>
+            <p>Each parity check returns either <strong>0</strong> (the checked bits have even parity) or <strong>1</strong> (odd parity, so the check fails). Put the results together to form the syndrome. The faulty bit can be a data bit or a parity bit; parity bits are included in their own checks, so the same method finds either kind.</p>
+            <ol class="guide-steps">
+                <li>Number the received bits from left to right, starting at position 1.</li>
+                <li>Check P1 at positions 1, 3, 5, 7; P2 at 2, 3, 6, 7; and P4 at 4, 5, 6, 7. Include the parity bit itself in each check.</li>
+                <li>Write the results in <strong>P4 P2 P1</strong> order. Convert that binary number to decimal; the result is the faulty position.</li>
+                <li>Flip that position to correct the received codeword. This method assumes one flipped bit.</li>
+            </ol>
+            <h3>Data-bit example</h3>
+            <p>Received codeword: <span class="guide-code">1010001</span></p>
+            <table class="guide-table">
+                <thead><tr><th>Check</th><th>Bits checked</th><th>Result</th></tr></thead>
+                <tbody>
+                    <tr><th scope="row">P1</th><td>1, 3, 5, 7 → 1, 1, 0, 1</td><td>Fails → 1</td></tr>
+                    <tr><th scope="row">P2</th><td>2, 3, 6, 7 → 0, 1, 0, 1</td><td>Passes → 0</td></tr>
+                    <tr><th scope="row">P4</th><td>4, 5, 6, 7 → 0, 0, 0, 1</td><td>Fails → 1</td></tr>
+                </tbody>
+            </table>
+            <p>Syndrome <strong>P4 P2 P1 = 1 0 1₂ = 5</strong>. So bit 5 is faulty. Flip it to get <span class="guide-code">1010101</span>.</p>
+            <h3>Parity-bit example</h3>
+            <p>Start with the same valid codeword <span class="guide-code">1010101</span>, but this time parity bit 4 flips. The received codeword is <span class="guide-code">1011101</span>.</p>
+            <table class="guide-table">
+                <thead><tr><th>Check</th><th>Bits checked</th><th>Result</th></tr></thead>
+                <tbody>
+                    <tr><th scope="row">P1</th><td>1, 3, 5, 7 → 1, 1, 1, 1</td><td>Passes → 0</td></tr>
+                    <tr><th scope="row">P2</th><td>2, 3, 6, 7 → 0, 1, 0, 1</td><td>Passes → 0</td></tr>
+                    <tr><th scope="row">P4</th><td>4, 5, 6, 7 → 1, 1, 0, 1</td><td>Fails → 1</td></tr>
+                </tbody>
+            </table>
+            <p>Syndrome <strong>P4 P2 P1 = 1 0 0₂ = 4</strong>, so parity bit 4 is faulty. Flip it to recover <span class="guide-code">1010101</span>. The game can choose any position for the single error, including parity positions.</p>
+        </div>
+    </dialog>
 
     <script>
         const lengthInput = document.getElementById("code-length");
@@ -367,6 +473,7 @@
         const formulaExample = document.getElementById("formula-example");
         const parityTip = document.getElementById("parity-tip");
         const difficultyInputs = document.querySelectorAll('input[name="difficulty"]');
+        const guideDialog = document.getElementById("guide-dialog");
 
         let receivedBits = [];
         let faultyPosition = 0;
@@ -532,6 +639,7 @@
 
         checkButton.addEventListener("click", checkAnswer);
         newButton.addEventListener("click", startChallenge);
+        document.getElementById("open-guide").addEventListener("click", () => guideDialog.showModal());
         lengthInput.addEventListener("input", () => {
             settingsError.hidden = true;
             lengthInput.removeAttribute("aria-invalid");
