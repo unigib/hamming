@@ -132,6 +132,11 @@
         }
 
         .difficulty input { margin: 0; }
+        .error-type-options { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; border: 0; }
+        .error-type-options legend { margin-bottom: 6px; font-size: .9rem; font-weight: 700; }
+        .error-type-options label { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #aebaca; border-radius: 6px; background: #fff; cursor: pointer; }
+        .error-type-options input { margin: 0; }
+        .error-type-options[hidden] { display: none; }
 
         .difficulty label:has(input:checked) {
             border-color: var(--navy);
@@ -375,10 +380,15 @@
         <main>
             <div class="top-row">
                 <div class="settings">
-                    <label for="code-length">Code length (bits)</label>
+                    <label for="code-length">Hamming code length (bits)</label>
                     <input id="code-length" type="number" min="3" max="31" step="1" value="7">
-                    <p class="hint">Choose 3–31 bits. Applies to the next challenge.</p>
+                    <p id="length-hint" class="hint">Choose 3–31 bits. Applies to the next challenge.</p>
                     <div class="parity-controls">
+                        <fieldset class="difficulty">
+                            <legend>Code type</legend>
+                            <label><input type="radio" name="code-type" value="standard" checked> Standard</label>
+                            <label><input type="radio" name="code-type" value="extended"> Extended (SECDED)</label>
+                        </fieldset>
                         <fieldset class="difficulty">
                             <legend>Parity hints</legend>
                             <label><input type="radio" name="difficulty" value="easy" checked> Show Parity</label>
@@ -407,7 +417,12 @@
                     <h2 id="challenge-title">Transmission received</h2>
                     <span class="round-number" id="round-number">Challenge 1</span>
                 </div>
-                <p class="instructions">Select the bit you think was flipped, then check your answer. Positions are numbered from left to right, starting at 1.</p>
+                <p id="instructions" class="instructions">Select the bit you think was flipped, then check your answer. Positions are numbered from left to right, starting at 1.</p>
+                <fieldset id="error-type-options" class="error-type-options" hidden>
+                    <legend>How many bits were flipped?</legend>
+                    <label><input type="radio" name="error-count" value="1"> One bit (correctable)</label>
+                    <label><input type="radio" name="error-count" value="2"> Two bits (detectable)</label>
+                </fieldset>
                 <div id="bit-list" class="bit-list" role="group" aria-label="Received codeword bits"></div>
                 <div class="actions">
                     <button id="check-answer" class="primary" type="button" disabled>Check answer</button>
@@ -416,7 +431,7 @@
                 <section id="feedback" class="feedback" aria-live="polite" hidden></section>
             </section>
 
-            <p class="footnote">Each challenge uses even parity and flips exactly one bit, which may be a data bit or parity bit. After you answer, compare the parity checks and syndrome with your chosen position.</p>
+            <p id="footnote" class="footnote">Standard mode corrects one flipped bit. Extended Hamming (SECDED) adds an overall-parity bit to correct one error and detect, but not correct, two errors.</p>
         </main>
     </div>
 
@@ -457,6 +472,18 @@
                 </tbody>
             </table>
             <p>Syndrome <strong>P4 P2 P1 = 1 0 0₂ = 4</strong>, so parity bit 4 is faulty. Flip it to recover <span class="guide-code">1010101</span>. The game can choose any position for the single error, including parity positions.</p>
+            <h3>Extended Hamming (SECDED)</h3>
+            <p>Extended Hamming adds one overall even-parity bit after the regular Hamming code. The regular parity checks still form the syndrome; the overall check covers every bit, including the extra bit.</p>
+            <table class="guide-table">
+                <thead><tr><th>Syndrome</th><th>Overall check</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>Passes</td><td>No error detected</td></tr>
+                    <tr><td>Non-zero</td><td>Fails</td><td>One error in a regular Hamming position; correctable</td></tr>
+                    <tr><td>0</td><td>Fails</td><td>Error in the extra overall-parity bit; correctable</td></tr>
+                    <tr><td>Non-zero</td><td>Passes</td><td>Two-bit error detected; the two positions cannot be identified from these checks</td></tr>
+                </tbody>
+            </table>
+            <p>SECDED means <strong>single-error correction, double-error detection</strong>. It does not reliably correct two flipped bits.</p>
         </div>
     </dialog>
 
@@ -473,11 +500,18 @@
         const formulaExample = document.getElementById("formula-example");
         const parityTip = document.getElementById("parity-tip");
         const difficultyInputs = document.querySelectorAll('input[name="difficulty"]');
+        const codeTypeInputs = document.querySelectorAll('input[name="code-type"]');
+        const errorTypeOptions = document.getElementById("error-type-options");
+        const lengthHint = document.getElementById("length-hint");
+        const instructions = document.getElementById("instructions");
         const guideDialog = document.getElementById("guide-dialog");
 
         let receivedBits = [];
-        let faultyPosition = 0;
+        let faultyPositions = [];
         let selectedPosition = 0;
+        let selectedErrorCount = 0;
+        let challengeErrorCount = 1;
+        let hammingLength = 0;
         let answered = false;
         let round = 0;
         let correctAnswers = 0;
@@ -489,8 +523,16 @@
             return document.querySelector('input[name="difficulty"]:checked').value === "easy";
         }
 
+        function isExtendedMode() {
+            return document.querySelector('input[name="code-type"]:checked').value === "extended";
+        }
+
         function updateFormula() {
             parityTip.hidden = !isEasyMode();
+            const extended = isExtendedMode();
+            lengthHint.textContent = extended
+                ? "Choose 3–31 Hamming bits; Extended mode adds one overall-parity bit."
+                : "Choose 3–31 bits. Applies to the next challenge.";
             const length = Number(lengthInput.value);
             if (!Number.isInteger(length) || length < 3 || length > 31) {
                 formulaExample.textContent = "Enter a code length from 3 to 31 to see the parity and data bit counts.";
@@ -500,7 +542,10 @@
             let parityBits = 1;
             while (2 ** parityBits < length + 1) parityBits++;
             const dataBits = length - parityBits;
-            formulaExample.textContent = `${length} total bits: r = ${parityBits} parity bits and k = ${dataBits} data bits. Check: 2^${parityBits} = ${2 ** parityBits} ≥ ${dataBits} + ${parityBits} + 1 = ${length + 1}.`;
+            const summary = `r = ${parityBits} parity bits and k = ${dataBits} data bits. Check: 2^${parityBits} = ${2 ** parityBits} ≥ ${dataBits} + ${parityBits} + 1 = ${length + 1}.`;
+            formulaExample.textContent = extended
+                ? `${length} Hamming bits: ${summary} Extended codeword: ${length + 1} bits, including one overall-parity bit.`
+                : `${length} total bits: ${summary}`;
         }
 
         function isParityPosition(position) {
@@ -527,12 +572,18 @@
             return bits;
         }
 
-        function getParityChecks(bits) {
+        function addOverallParity(bits, length) {
+            let parity = 0;
+            for (let position = 1; position <= length; position++) parity ^= bits[position];
+            bits[length + 1] = parity;
+        }
+
+        function getParityChecks(bits, length) {
             const checks = [];
-            for (let parityPosition = 1; parityPosition < bits.length; parityPosition *= 2) {
+            for (let parityPosition = 1; parityPosition <= length; parityPosition *= 2) {
                 let result = 0;
                 const positions = [];
-                for (let position = 1; position < bits.length; position++) {
+                for (let position = 1; position <= length; position++) {
                     if ((position & parityPosition) !== 0) {
                         result ^= bits[position];
                         positions.push(position);
@@ -551,18 +602,22 @@
                 button.className = "bit";
                 button.dataset.position = String(position);
                 button.setAttribute("aria-pressed", String(position === selectedPosition));
-                const parityLabel = isEasyMode() && isParityPosition(position) ? `Parity P${position}` : "";
+                const isOverallParity = isExtendedMode() && position === hammingLength + 1;
+                const parityLabel = isEasyMode()
+                    ? isOverallParity ? "Overall parity" : isParityPosition(position) ? `Parity P${position}` : ""
+                    : "";
                 if (parityLabel) button.classList.add("is-parity");
                 const accessibleRole = parityLabel ? `, ${parityLabel}` : "";
                 button.setAttribute("aria-label", `Position ${position}${accessibleRole}, bit ${receivedBits[position]}`);
                 button.innerHTML = `<span class="bit-value">${receivedBits[position]}</span><span class="bit-position">Position ${position}</span>`;
+                if (isExtendedMode()) button.disabled = true;
                 if (answered) {
                     button.disabled = true;
-                    if (position === faultyPosition) button.classList.add("is-fault");
-                    if (position === selectedPosition && position !== faultyPosition) button.classList.add("is-wrong");
+                    if (faultyPositions.includes(position)) button.classList.add("is-fault");
+                    if (!isExtendedMode() && position === selectedPosition && !faultyPositions.includes(position)) button.classList.add("is-wrong");
                 }
                 button.addEventListener("click", () => {
-                    if (answered) return;
+                    if (answered || isExtendedMode()) return;
                     selectedPosition = position;
                     for (const bitButton of bitList.children) {
                         bitButton.setAttribute("aria-pressed", String(bitButton === button));
@@ -571,7 +626,7 @@
                 });
                 bitList.append(button);
             }
-            checkButton.disabled = answered || selectedPosition === 0;
+            checkButton.disabled = answered || (isExtendedMode() ? selectedErrorCount === 0 : selectedPosition === 0);
         }
 
         function startChallenge() {
@@ -586,14 +641,29 @@
 
             settingsError.hidden = true;
             lengthInput.removeAttribute("aria-invalid");
+            hammingLength = length;
+            const extended = isExtendedMode();
             const originalBits = createCodeword(length);
-            faultyPosition = Math.floor(Math.random() * length) + 1;
+            if (extended) addOverallParity(originalBits, length);
+            challengeErrorCount = extended && Math.random() < 0.5 ? 2 : 1;
+            const codewordLength = length + (extended ? 1 : 0);
+            faultyPositions = [];
+            while (faultyPositions.length < challengeErrorCount) {
+                const position = Math.floor(Math.random() * codewordLength) + 1;
+                if (!faultyPositions.includes(position)) faultyPositions.push(position);
+            }
             receivedBits = originalBits.slice();
-            receivedBits[faultyPosition] ^= 1;
+            for (const position of faultyPositions) receivedBits[position] ^= 1;
             selectedPosition = 0;
+            selectedErrorCount = 0;
             answered = false;
             round++;
             roundDisplay.textContent = `Challenge ${round}`;
+            instructions.textContent = extended
+                ? "Use the syndrome and overall-parity check to decide whether one or two bits were flipped."
+                : "Select the bit you think was flipped, then check your answer. Positions are numbered from left to right, starting at 1.";
+            errorTypeOptions.hidden = !extended;
+            for (const input of errorTypeOptions.querySelectorAll('input[name="error-count"]')) input.checked = false;
             feedback.hidden = true;
             feedback.replaceChildren();
             checkButton.disabled = true;
@@ -601,10 +671,12 @@
         }
 
         function checkAnswer() {
-            if (answered || selectedPosition === 0) return;
+            if (answered || (isExtendedMode() ? selectedErrorCount === 0 : selectedPosition === 0)) return;
             answered = true;
             totalAnswers++;
-            const isCorrect = selectedPosition === faultyPosition;
+            const isCorrect = isExtendedMode()
+                ? selectedErrorCount === challengeErrorCount
+                : selectedPosition === faultyPositions[0];
             if (isCorrect) {
                 correctAnswers++;
                 currentStreak++;
@@ -615,25 +687,49 @@
             scoreDisplay.textContent = `${correctAnswers} / ${totalAnswers}`;
             streakDisplay.textContent = String(bestStreak);
 
-            const checks = getParityChecks(receivedBits);
+            const checks = getParityChecks(receivedBits, hammingLength);
             const syndrome = checks.reduce((value, check) => value + (check.result ? check.parityPosition : 0), 0);
             const syndromeBits = checks.slice().reverse().map((check) => check.result).join("");
+            const overallParity = isExtendedMode()
+                ? receivedBits.slice(1).reduce((parity, bit) => parity ^ bit, 0)
+                : 0;
             const correctedBits = receivedBits.slice();
-            correctedBits[faultyPosition] ^= 1;
+            if (!isExtendedMode()) {
+                correctedBits[faultyPositions[0]] ^= 1;
+            } else if (challengeErrorCount === 1) {
+                const faultyPosition = syndrome === 0 ? hammingLength + 1 : syndrome;
+                correctedBits[faultyPosition] ^= 1;
+            }
 
             for (const button of bitList.children) {
                 const position = Number(button.dataset.position);
                 button.disabled = true;
-                if (position === faultyPosition) button.classList.add("is-fault");
-                if (position === selectedPosition && !isCorrect) button.classList.add("is-wrong");
+                if (faultyPositions.includes(position)) button.classList.add("is-fault");
+                if (!isExtendedMode() && position === selectedPosition && !isCorrect) button.classList.add("is-wrong");
             }
             checkButton.disabled = true;
 
-            feedback.innerHTML = `
-                <h3 class="${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "Correct!" : `Not quite — the faulty bit was at position ${faultyPosition}.`}</h3>
-                <p>The parity-check syndrome is <strong>${syndromeBits}</strong> (binary), which is <strong>${syndrome}</strong> in decimal. It identifies position ${syndrome}.</p>
-                <p class="checks">${checks.map((check) => `P${check.parityPosition} checks positions ${check.positions.join(", ")}: ${check.result ? "fails" : "passes"}`).join("<br>")}</p>
-                <p>Received: <span class="code">${receivedBits.slice(1).join("")}</span><br>Corrected: <span class="code">${correctedBits.slice(1).join("")}</span></p>`;
+            const checksDescription = checks.map((check) => `P${check.parityPosition} checks positions ${check.positions.join(", ")}: ${check.result ? "fails" : "passes"}`).join("<br>");
+            if (isExtendedMode()) {
+                const diagnosis = challengeErrorCount === 1
+                    ? syndrome === 0
+                        ? `The extra overall-parity bit at position ${hammingLength + 1} is faulty.`
+                        : `The syndrome identifies position ${syndrome} as the single faulty bit.`
+                    : "The non-zero syndrome with an even overall check indicates a double-bit error. The checks detect it but cannot identify both positions.";
+                feedback.innerHTML = `
+                    <h3 class="${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "Correct!" : `Not quite — ${challengeErrorCount} bit${challengeErrorCount === 1 ? "" : "s"} were flipped.`}</h3>
+                    <p>The parity-check syndrome is <strong>${syndromeBits}</strong> (binary), or <strong>${syndrome}</strong> in decimal. The overall-parity check ${overallParity ? "fails" : "passes"}.</p>
+                    <p>${diagnosis}</p>
+                    <p class="checks">${checksDescription}<br>Overall parity across all ${hammingLength + 1} bits: ${overallParity ? "fails" : "passes"}</p>
+                    <p>Received: <span class="code">${receivedBits.slice(1).join("")}</span>${challengeErrorCount === 1 ? `<br>Corrected: <span class="code">${correctedBits.slice(1).join("")}</span>` : ""}</p>`;
+            } else {
+                const faultyPosition = faultyPositions[0];
+                feedback.innerHTML = `
+                    <h3 class="${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "Correct!" : `Not quite — the faulty bit was at position ${faultyPosition}.`}</h3>
+                    <p>The parity-check syndrome is <strong>${syndromeBits}</strong> (binary), which is <strong>${syndrome}</strong> in decimal. It identifies position ${syndrome}.</p>
+                    <p class="checks">${checksDescription}</p>
+                    <p>Received: <span class="code">${receivedBits.slice(1).join("")}</span><br>Corrected: <span class="code">${correctedBits.slice(1).join("")}</span></p>`;
+            }
             feedback.hidden = false;
         }
 
@@ -649,6 +745,18 @@
             difficultyInput.addEventListener("change", () => {
                 updateFormula();
                 renderBits();
+            });
+        }
+        for (const codeTypeInput of codeTypeInputs) {
+            codeTypeInput.addEventListener("change", () => {
+                updateFormula();
+                startChallenge();
+            });
+        }
+        for (const errorCountInput of errorTypeOptions.querySelectorAll('input[name="error-count"]')) {
+            errorCountInput.addEventListener("change", () => {
+                selectedErrorCount = Number(errorCountInput.value);
+                checkButton.disabled = answered || selectedErrorCount === 0;
             });
         }
         updateFormula();
